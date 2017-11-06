@@ -1,0 +1,154 @@
+<html>
+	<head>
+		<title>GGJ 2015 Blame Game</title>
+		<title>Phaser - Making your first game, part 1</title>
+        <script type ="text/javascript">WIDTH=800;HEIGHT=400</script>
+		<script type="text/javascript" src="js/phaser.js"></script>
+        <script type="text/javascript" src="js/genericHelper.js"></script>
+        <script type="text/javascript" src="js/mapHelper.js"></script>
+        <script type="text/javascript" src="js/gameOperations.js"></script>
+
+	    <style type="text/css">
+	        body {
+	        	margin: 0;
+	        }
+
+	        canvas {
+	        	margin: auto;
+	        }
+	    </style>
+	</head>
+
+
+	<body>
+		<script type="text/javascript">
+
+        var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+		function preload() {
+            // load the tiles
+            //game.load.image('bombTile', 'assets/bombtiles.png');
+            game.load.image('mineTile', 'assets/minetiles.png');
+
+            // tests
+            //game.load.tilemap('map', 'assets/tile-property.json', null, Phaser.Tilemap.TILED_JSON);
+            //game.load.image('tiles', 'assets/gridtiles.png');
+		}
+
+        var bombCounter = 0;
+        var map;
+        var bomblayer;
+        var cladlayer;
+        var marker;
+
+        var cursors;
+        var mouse;
+
+        // TODO: build a UI
+        //       - need a count of number of bomb left in the game
+        //       - end the game when bomb is clicked
+        //       - check when the board is clear
+        //       - a timer
+        //       - able to pick easy/normal/hard level
+        //       - introduce lives to player
+        //       - introduce hint: reveal one location of bomb
+        //       - cache the result for ranking
+
+		function create() {
+			// use tilemap to create a map
+            // set default map size
+			var MAP_HEIGHT = 10;
+			var MAP_WIDTH = 5;
+			var data = [];
+
+            data = initializeMap(MAP_HEIGHT, MAP_WIDTH);
+
+            // finish the map by adding hint numbers around the bomb cell
+            completeMap(data, 0, data.length, 0, data[0].length);
+            console.log(data);
+            console.log("check counter: " + bombCounter);
+
+            // extract the 2D array data to 1D array
+            var flatdata = get1DArray(data);
+            console.log(flatdata);
+
+            // create the map json object
+            var mapjson = buildMapJson(flatdata, MAP_HEIGHT, MAP_WIDTH, 32, 32);
+            console.log(mapjson);
+
+            // create a cache map json 
+            //game.cache.addJSON('mapJson', null, mapjson);
+
+            // add the map data to cache
+            game.cache.addTilemap('bombMap', null, mapjson, Phaser.Tilemap.TILED_JSON);
+            //game.cache.addTilemap('map', null, testmap, Phaser.Tilemap.TILED_JSON);
+
+            game.physics.startSystem(Phaser.Physics.ARCADE);
+
+            // Create the map
+            // do not need to specify the tileWidth and tileHeight if using Tiled map data
+            // default size is 32x32
+            map = game.add.tilemap('bombMap');
+ 
+            // create tiles from TODO and add them to the map
+            // default size is 32x32
+            // param: tileset in map data, key from cache, 
+            //        tileWidth, tileHeight, tileMargin, tileSpacing, gid
+            // TODO: should be invisible first, but should what's underneath for dev mode
+            map.addTilesetImage('bombTile', 'mineTile', 32, 32);
+            //map.addTilesetImage('cladTile', 'mineTile', 32, 32);
+
+            // create the tilemapLayer object and place at layer array index value 0
+            // default width and height of the layer is the Game width and height
+            bomblayer = map.createLayer('BombLayer');
+            cladlayer = map.createLayer('CladLayer');
+
+            // Sets the world size to match the size of this layer.
+            bomblayer.resizeWorld();
+            cladlayer.resizeWorld();
+
+            game.physics.startSystem(Phaser.Physics.ARCADE);
+
+            // marker: the reg that heighlights the tile
+            marker = game.add.graphics();
+            marker.lineStyle(2, 0xffffff, 1);
+            marker.drawRect(0, 0, 32, 32);
+
+            game.input.addMoveCallback(updateMarker, this);
+
+            // game.input.onDown returns a Signal, which allows adding a callback function
+            // this in the bracket: the context of the callback function
+            game.input.onDown.add(onTileClicked, this);
+
+            cursors = game.input.keyboard.createCursorKeys();
+            mouse = game.input.mouse;
+		}
+
+        function updateMarker() {
+            marker.x = bomblayer.getTileX(game.input.activePointer.worldX) * 32;
+            marker.y = bomblayer.getTileY(game.input.activePointer.worldY) * 32;
+        }
+
+		function update() {
+            // cursors update
+            // this is for scolling the map
+            if (cursors.left.isDown) {
+                game.camera.x -= 4;
+            } else if (cursors.right.isDown) {
+                game.camera.x += 4;
+            }
+
+            if (cursors.up.isDown) {
+                game.camera.y -= 4;
+            } else if (cursors.down.isDown) {
+                game.camera.y += 4;
+            }
+
+
+            // update the map when cladtile is click
+		}
+	
+		</script>
+
+	</body>
+</html>
